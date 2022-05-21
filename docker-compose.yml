@@ -10,9 +10,21 @@ services:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+
+  makemigrations:
+    image: postgres
+    command: python manage.py makemigrations
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: >
+      sh -c  "python manage.py collectstatic --noinput &&
+              python manage.py migrate &&
+              python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/code
     ports:
@@ -23,5 +35,11 @@ services:
       - POSTGRES_PASSWORD=postgres
     depends_on:
       - db
+
+  test:
+    build: .
+    command: python manage.py test
+    volumes:
+    - .:/code
 
 
