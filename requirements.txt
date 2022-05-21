@@ -1,0 +1,8 @@
+asgiref==3.5.2
+Django==4.0.4
+django-uuslug==2.0.0
+Pillow==9.1.1
+psycopg2-binary==2.9.3
+python-slugify==6.1.2
+sqlparse==0.4.2
+text-unidecode==1.3
