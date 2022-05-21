@@ -1,0 +1,70 @@
+{% extends 'login/base.html' %}
+{% load static %}
+{% block content %}
+  <h1>Блог</h1>
+  <div class="row">
+    <p>Сортировать по:</p>
+    <ul>
+      <li>
+        <a href="{% url 'post_list_view_sort' 'post_created' %}">Дате</a>
+      </li>
+      <li>
+        <a href="{% url 'post_list_view_sort' '-post_rating' %}">Рейтинг возрастающий</a>
+      </li>
+      <li>
+        <a href="{% url 'post_list_view_sort' 'post_rating' %}">рейтинг убывающий</a>
+      </li>
+    </ul>
+    <form action="#" method="post">
+      {% csrf_token %}
+      <label for="count_post">Количество записей на странице</label>
+      <select name="count_post" id="">
+        <option value="2">2</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="15">15</option>
+      </select>
+      <button type="submit">Подтвердить</button>
+    </form>
+
+  </div>
+  <div class="row">
+    {% for post in posts %}
+      <div class="col-lg-6 mb-5">
+        <div class="card" {% if post.post_image %}
+             style="background-image: url('{{ post.post_image.url }}')" {% endif %}>
+          <div class="card-body">
+            <h3 class="card-title">{{ post.post_title }}</h3>
+            <p class="card-text">{{ post.post_short_description|truncatechars:9 }}</p>
+            <p>{{ post_created }}</p>
+            <ul class="list-group list-group-flush mb-3">
+              <li class="list-group-item">Опубликовано: {{ post.post_created }}</li>
+              <li class="list-group-item">Отредактировано: {{ post.post_updated }}</li>
+              <li class="list-group-item">Рейтинг: {{ post.post_rating }}</li>
+              <li class="list-group-item">Количество просмотров: {{ post.post_count_view }}</li>
+            </ul>
+            <a href="{{ post.get_absolute_url }}" class="btn btn-primary float-right stretched-link">К новости</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">Предыдущая</a>
+        {% endif %}
+
+        <span class="current">
+            Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">Следующая</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">Последняя &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
+{% endblock %}

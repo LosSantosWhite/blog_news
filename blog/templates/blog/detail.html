@@ -1,0 +1,33 @@
+{% extends 'login/base.html' %}
+{% block title %} {{ post.post_title }} {% endblock %}
+{% block content %}
+  <h1>{{ post.post_title }}</h1>
+
+  <div class="row">
+    <div class="col-sm-8">
+      <h5>{{ post.post_created }}</h5>
+      <a class="btn btn-primary" href="{% url 'login:favorites_add' post.id %}">
+        Добавить в избранное
+      </a>
+    {% if post.post_author == request.user %}
+      <a class="btn btn-danger" href="{% url 'post_update_view' post.post_slug %}">
+        Редактировать
+      </a>
+    {% endif %}
+      <p class="lead">{{ post.post_text }}</p>
+      {% for image in post.images.all %}
+        <img src="{{ image.image.url }}" alt="{{ post.post_title }}">
+      {% endfor %}
+    </div>
+  </div>
+
+  <p>
+    Рейтинг статьи: {{ post.post_rating }}
+  </p>
+  <form action="{% url 'blog:post_like_view' %}" method="post">
+  {% csrf_token %}
+  <button class="btn btn-primary " type="submit" name="like" value="{{ post.id }}">Нравится!</button>
+  <button class="btn btn-danger" type="submit" name="dislike" value="{{ post.id }}">Не нравится!</button>
+
+  </form>
+{% endblock %}

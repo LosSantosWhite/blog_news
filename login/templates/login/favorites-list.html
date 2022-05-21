@@ -1,0 +1,28 @@
+{% extends "login/base.html" %}
+{% block title %}Избранные новости{% endblock %}
+{% block content %}
+  <section class="row">
+  <h2>Избранные записи</h2>
+    <div class="container">
+      {% for post in posts %}
+        <div class="col-lg-6 mb-5">
+          <div class="card" {% if post.post_image %}
+               style="background-image: url('{{ post.post_image.url }}')" {% endif %}>
+            <div class="card-body">
+              <h3 class="card-title">{{ post.post_title }}</h3>
+              <p class="card-text">{{ post.post_short_description|truncatechars:9 }}</p>
+              <p>{{ post_created }}</p>
+              <ul class="list-group list-group-flush mb-3">
+                <li class="list-group-item">Опубликовано: {{ post.post_created }}</li>
+                <li class="list-group-item">Отредактировано: {{ post.post_updated }}</li>
+                <li class="list-group-item">Рейтинг: {{ post.post_rating }}</li>
+                <li class="list-group-item">Количество просмотров: {{ post.post_count_view }}</li>
+              </ul>
+              <a href="{{ post.get_absolute_url }}" class="btn btn-primary float-right stretched-link">К новости</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

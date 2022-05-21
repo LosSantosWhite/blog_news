@@ -1,0 +1,11 @@
+{% extends 'login/base.html' %}
+{% block title %}Создание блога{% endblock %}
+{% block content %}
+<h1>Создание новости</h1>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ post_form.as_p }}
+    {{ image_form.as_p }}
+     <input type="submit">
+</form>
+{% endblock %}
