@@ -9,14 +9,13 @@
         <a href="{% url 'post_list_view_sort' 'post_created' %}">Дате</a>
       </li>
       <li>
-        <a href="{% url 'post_list_view_sort' '-post_rating' %}">Рейтинг возрастающий</a>
+        <a href="{% url 'post_list_view_sort' '-post_rating' %}">Рейтинг убывающий</a>
       </li>
       <li>
-        <a href="{% url 'post_list_view_sort' 'post_rating' %}">рейтинг убывающий</a>
+        <a href="{% url 'post_list_view_sort' 'post_rating' %}">рейтинг Возрастаешь</a>
       </li>
     </ul>
-    <form action="#" method="post">
-      {% csrf_token %}
+    <form action="." method="get">
       <label for="count_post">Количество записей на странице</label>
       <select name="count_post" id="">
         <option value="2">2</option>
@@ -52,7 +51,7 @@
   <div class="pagination">
     <span class="step-links">
         {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; first</a>
+            <a href="?page=1">&laquo; Первая</a>
             <a href="?page={{ page_obj.previous_page_number }}">Предыдущая</a>
         {% endif %}
 

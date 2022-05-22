@@ -4,9 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
-from django.views.generic import ListView, DetailView, CreateView, FormView, UpdateView, View
+from django.views.generic import ListView, DetailView, FormView, UpdateView, View
 from blog.forms import UploadPostForm, CreateImageForm, CreatePostForm
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 
 from uuslug import slugify
 
@@ -14,28 +14,39 @@ from blog.models import Post, Images
 
 
 class PostListView(ListView):
+    """
+    Отображение списка постов
+    """
+
     paginate_by = 5
     model = Post
     context_object_name = "posts"
     template_name = "blog/list.html"
 
     def get_context_data(self, object_list=None, **kwargs):
-        context = super(PostListView, self).get_context_data(object_list=object_list, **kwargs)
-        context['page'] = self.request.GET.get('page')
-        if self.kwargs.get('parameter'):
-            context['posts'] = self.get_queryset(self.kwargs.get('parameter'))
+        context = super(PostListView, self).get_context_data(
+            object_list=object_list, **kwargs
+        )
+        context["page"] = self.paginate_by
+
+        if self.kwargs.get("parameter"):
+            context["posts"] = self.get_queryset(self.kwargs.get("parameter"))
         return context
 
-    def post(self, request, **kwargs):
-        if 2 <= int(self.request.POST['count_post']) <= 15:
-            self.paginate_by = self.request.POST['count_post']
-        return render(request, self.template_name, self.get_context_data(object_list=self.get_queryset()))
+    def get(self, request, **kwargs):
+        if self.request.GET.get("count_post"):
+            self.paginate_by = int(self.request.GET.get("count_post"))
+        return super(PostListView, self).get(request, **kwargs)
 
-    def get_queryset(self, parameter='-post_created'):
+    def get_queryset(self, parameter="-post_created"):
         return Post.post_objects.order_by(str(parameter))
 
 
 class PostDetailView(DetailView):
+    """
+    Детальное отображение постов
+    """
+
     model = Post
     template_name = "blog/detail.html"
     context_object_name = "post"
@@ -85,6 +96,10 @@ def post_creat_view(request):
 
 
 class UploadPostView(LoginRequiredMixin, FormView):
+    """
+    Загрузка нескольких блогов через csv файл
+    """
+
     template_name = "blog/upload_file.html"
     form_class = UploadPostForm
     login_url = "/login/"
@@ -99,6 +114,7 @@ class UploadPostView(LoginRequiredMixin, FormView):
                 post_title=row[0],
                 post_author=self.request.user,
                 post_text=row[1],
+                post_barcode=row[2],
             )
         return super(UploadPostView, self).form_valid(form)
 
@@ -107,44 +123,61 @@ class UploadPostView(LoginRequiredMixin, FormView):
 
 
 class PostUpdateView(LoginRequiredMixin, UpdateView):
+    """
+    Изменение записи
+    """
+
     model = Post
-    template_name = 'blog/post_update.html'
-    fields = ['post_title', 'post_text', 'post_slug', 'post_short_description']
+    template_name = "blog/post_update.html"
+    fields = ["post_title", "post_text", "post_slug", "post_short_description"]
 
     def get_object(self, queryset=None):
-        return get_object_or_404(Post, post_slug=self.kwargs.get('post_slug'))
+        return get_object_or_404(Post, post_slug=self.kwargs.get("post_slug"))
 
     def form_valid(self, form):
-        form.instance.author = self.request.user
         return super(PostUpdateView, self).form_valid(form)
+
+    def test_func(self):
+        """
+        Проверка, что пользователь это автор и
+        позволяет ему редактировать пост иначе 403
+        """
+        obj = self.get_object()
+        return obj.post_author == self.request.user
 
 
 class PostLikeView(LoginRequiredMixin, View):
-
     def post(self, request, *args, **kwargs):
-        post_id = self.request.POST.get('dislike') or self.request.POST.get('like')
+        """
+        Подсчет 'лайков' и 'дизлайков'
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        post_id = self.request.POST.get("dislike") or self.request.POST.get("like")
         post = Post.post_objects.get(id=post_id)
-        print(post.post_user_dislike.filter(username=self.request.user))
-        print(post.post_user_like.filter(username=self.request.user))
         if self.request.user in post.post_user_like.filter(username=self.request.user):
-            if self.request.POST.get('like'):
+            if self.request.POST.get("like"):
                 post.post_user_like.remove(self.request.user)
                 post.post_rating -= 1
-            elif self.request.POST.get('dislike'):
+            elif self.request.POST.get("dislike"):
                 post.post_user_like.remove(self.request.user)
                 post.post_user_dislike.add(self.request.user)
                 post.post_rating -= 2
-        elif self.request.user in post.post_user_dislike.filter(username=self.request.user):
-            if self.request.POST.get('dislike'):
+        elif self.request.user in post.post_user_dislike.filter(
+            username=self.request.user
+        ):
+            if self.request.POST.get("dislike"):
                 post.post_rating += 1
                 post.post_user_dislike.remove(self.request.user)
 
-            elif self.request.POST.get('like'):
+            elif self.request.POST.get("like"):
                 post.post_user_like.add(self.request.user)
                 post.post_user_dislike.remove(self.request.user)
                 post.post_rating += 2
         else:
-            if self.request.POST.get('like'):
+            if self.request.POST.get("like"):
                 post.post_rating += 1
                 post.post_user_like.add(self.request.user)
 
@@ -153,4 +186,6 @@ class PostLikeView(LoginRequiredMixin, View):
                 post.post_user_dislike.add(self.request.user)
         post.save()
 
-        return HttpResponseRedirect(reverse('blog:post_detail_view', args=[post.post_slug]))
+        return HttpResponseRedirect(
+            reverse("blog:post_detail_view", args=[post.post_slug])
+        )

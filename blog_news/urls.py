@@ -23,15 +23,11 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
-                  path("admin/", admin.site.urls),
-                  path("blog/", include("blog.urls", namespace="blog")),
-                  path("login/", include("login.urls", namespace="login")),
-                  path("", PostListView.as_view(), name="post_list_view"),
-                  path("create/", post_creat_view, name="post_create_view"),
-                  path("update/<slug:post_slug>", PostUpdateView.as_view(), name="post_update_view"),
-                  path('<parameter>/', PostListView.as_view(), name='post_list_view_sort'),
-                  # path('sort_by_raiting_asc/', PostListView.as_view(), name='post_view_raitnig_asc'),
-                  # path('sort_by_raiting_desc/', PostListView.as_view(), name='post_update_view_raitnig_desc'),
-
-
-              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path("admin/", admin.site.urls),
+    path("blog/", include("blog.urls", namespace="blog")),
+    path("login/", include("login.urls", namespace="login")),
+    path("", PostListView.as_view(), name="post_list_view"),
+    path("create/", post_creat_view, name="post_create_view"),
+    path("update/<slug:post_slug>", PostUpdateView.as_view(), name="post_update_view"),
+    path("<parameter>/", PostListView.as_view(), name="post_list_view_sort"),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

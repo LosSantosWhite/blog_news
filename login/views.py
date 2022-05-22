@@ -78,12 +78,12 @@ class FavoriteView(LoginRequiredMixin, View):
 
 
 class FavoriteListView(LoginRequiredMixin, ListView):
-    template_name = 'login/favorites-list.html'
+    template_name = "login/favorites-list.html"
 
     def get_queryset(self):
         return Post.post_objects.filter(post_user_favorite=self.request.user)
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super(FavoriteListView, self).get_context_data(**kwargs)
-        context['posts'] = self.get_queryset()
+        context["posts"] = self.get_queryset()
         return context

@@ -1,13 +1,10 @@
-import os.path
-
-from django.test import SimpleTestCase, TestCase
-from django.test.client import Client
+from django.test import TestCase
 from django.urls import reverse
-from django.utils.text import slugify
+from uuslug import slugify
+
 from blog.models import Post, User
 from blog.forms import CreatePostForm
 from django.core.files.uploadedfile import SimpleUploadedFile
-from uuslug import slugify
 
 NUMBER_OF_POSTS = 5
 
@@ -21,6 +18,9 @@ class TestViews(TestCase):
         user = User.objects.create_user(
             TestViews.test_user, "test@mail.com", TestViews.password
         )
+        second_user = User.objects.create_user(
+            "user_2", "test@mail.com", TestViews.password
+        )
 
         for post in range(NUMBER_OF_POSTS):
             Post.post_objects.create(
@@ -28,7 +28,7 @@ class TestViews(TestCase):
                 post_text=f"Это текст поста №{post}",
                 post_slug=f"{post}",
                 post_author=user,
-                post_barcode=post + 12345123
+                post_barcode=post + 12345123,
             )
 
     def test_list_view(self):
@@ -61,7 +61,7 @@ class TestViews(TestCase):
         data = {
             "post_title": "Заголовок тестового поста",
             "post_text": "Описание тестового поста",
-            "post_barcode": 12345
+            "post_barcode": 12345,
         }
         form = CreatePostForm(data=data)
         self.assertTrue(form.is_valid())
@@ -80,7 +80,7 @@ class TestViews(TestCase):
         data = {
             "post_title": f"Заголовок тестового поста POST-запрос валид",
             "post_text": "Описание тестового поста",
-            "post_barcode": 1234
+            "post_barcode": 1234,
         }
         self.client.post("/create/", data=data)
         self.assertTrue(
@@ -116,7 +116,7 @@ class TestViews(TestCase):
 
     def test_upload_file_with_login(self):
         self.client.login(username="test_user", password="raw_password")
-        file = SimpleUploadedFile("test_upload.csv", b"Title;Description")
+        file = SimpleUploadedFile("test_upload.csv", b"Title;Description;54321")
         self.client.post(reverse("blog:post_file_upload"), {"file": file})
         self.assertTrue(Post.post_objects.filter(post_title="Title").exists())
         self.assertEqual(len(Post.post_objects.filter(post_title="Title")), 1)
@@ -124,3 +124,35 @@ class TestViews(TestCase):
             Post.post_objects.get(post_title="Title").post_text, "Description"
         )
         self.assertEqual(Post.post_objects.get(post_title="Title").post_slug, "title")
+
+    def test_change_post(self):
+        self.client.login(username=TestViews.test_user, password=TestViews.password)
+        data = {
+            "post_title": "Новый заголовок поста",
+            "post_text": "Новый текст поста",
+            "post_slug": slugify("new slug"),
+            "post_short_description": "Новое короткое описание",
+        }
+        self.client.post("/update/0", data=data)
+        post = Post.post_objects.get(id=1)
+        self.assertEqual(post.post_slug, data["post_slug"])
+        self.assertEqual(post.post_title, data["post_title"])
+        self.assertEqual(post.post_text, data["post_text"])
+        self.assertEqual(post.post_short_description, data["post_short_description"])
+
+    def test_another_user_to_change_post(self):
+        self.client.login(username="user_2", password=TestViews.password)
+        data = {
+            "post_title": "Новый заголовок поста",
+            "post_text": "Новый текст поста",
+            "post_slug": slugify("new slug"),
+            "post_short_description": "Новое короткое описание",
+        }
+        post = Post.post_objects.get(id=1)
+
+        response = self.client.post("/update/0", data=data)
+        # self.assertEqual(response.status_code, 403)
+        self.assertNotEqual(post.post_slug, data["post_slug"])
+        self.assertNotEqual(post.post_title, data["post_title"])
+        self.assertNotEqual(post.post_text, data["post_text"])
+        self.assertNotEqual(post.post_short_description, data["post_short_description"])

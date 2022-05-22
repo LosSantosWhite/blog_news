@@ -11,8 +11,10 @@ class Post(models.Model):
         User,
         on_delete=models.CASCADE,
     )
-    post_short_description = models.CharField(max_length=250, verbose_name='Краткое описание', default='Краткое описание')
-    post_text = models.TextField(verbose_name='Полное описание')
+    post_short_description = models.CharField(
+        max_length=250, verbose_name="Краткое описание", default="Краткое описание"
+    )
+    post_text = models.TextField(verbose_name="Полное описание")
     post_created = models.DateTimeField(auto_now_add=True)
     post_updated = models.DateTimeField(auto_now=True)
     post_slug = models.SlugField()
@@ -20,13 +22,13 @@ class Post(models.Model):
     post_rating = models.IntegerField(default=0)
     post_count_view = models.IntegerField(default=0)
     post_user_like = models.ManyToManyField(
-        User, related_name='post_liked', default=None, blank=True
+        User, related_name="post_liked", default=None, blank=True
     )
     post_user_dislike = models.ManyToManyField(
-        User, related_name='post_disliked', default=None, blank=True
+        User, related_name="post_disliked", default=None, blank=True
     )
     post_user_favorite = models.ManyToManyField(
-        User, related_name='favorite', default=None, blank=True
+        User, related_name="favorite", default=None, blank=True
     )
 
     class Meta:
